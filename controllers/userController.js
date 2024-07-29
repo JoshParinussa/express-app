@@ -1,9 +1,7 @@
 // controllers/userController.js
 const bcrypt = require('bcrypt');
 const createError = require('http-errors');
-const db = require('../models');
-const { default: AsyncQueue } = require('sequelize/lib/dialects/mssql/async-queue');
-const User = db.user;
+const userService = require('../services/userServices');
 
 exports.createUser = async (req, res, next) => {
     try {
@@ -13,11 +11,7 @@ exports.createUser = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create the user
-        const newUser = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-        });
+        const newUser = await userService.createUser({ name, email, password: hashedPassword });
 
         res.status(201).json(newUser);
     } catch (err) {
@@ -31,22 +25,22 @@ exports.createUser = async (req, res, next) => {
 
 exports.getAllUsers = async (req, res, next) => {
     try {
-        const users = await User.findAll();
-        res.json(users)
+        const users = await userService.getAllUsers();
+        res.json(users);
     } catch (err) {
         next(createError(500, 'Failed to retrieve users'));
     }
-}
+};
 
 exports.getUserById = async (req, res, next) => {
     try {
-        const userID = req.params.id;
-        const user = await User.findByPk(userID);
-        if (!user){
+        const userId = req.params.id;
+        const user = await userService.getUserById(userId);
+        if (!user) {
             return next(createError(404, 'User not found'));
         }
-        res.json(user)
+        res.json(user);
     } catch (err) {
         next(createError(500, 'Failed to retrieve user'));
     }
-}
+};
